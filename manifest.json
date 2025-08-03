@@ -1,0 +1,20 @@
+{
+  "name": "Madopic - Markdown to Picture",
+  "short_name": "Madopic",
+  "description": "精美的 Markdown 转图片工具，轻松制作社交媒体图片",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "graphics"],
+  "lang": "zh-CN"
+}

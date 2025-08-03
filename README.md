@@ -1,2 +1,96 @@
 # Madopic
-Madopic (Markdown to Picture) 精美的 Markdown 转图片工具
+
+> Madopic (Markdown to Picture) 精美的 Markdown 转图片工具 ✨
+
+![](https://picsum.photos/id/666/500/200)
+
+一个现代化的在线工具，可以将 Markdown 文本转换为精美的图片海报，特别适合社交媒体分享。
+
+
+
+## 🚀 主要功能
+
+1. 将 Markdown 内容转化为图文海报
+2. 可以自定义背景、字体大小和边距
+3. 所见即所得，快速导出为 png 格式的图片
+4. 免费使用
+
+## 🎯 使用场景
+
+- 制作精美海报
+- 社交媒体内容分享
+- 文案图片制作
+- 产品功能介绍
+- 学习笔记可视化
+- 任何需要图片化展示的文本内容
+
+## 💻 使用方法
+
+1. **编写内容**：在左侧编辑器中输入 Markdown 文本
+2. **实时预览**：右侧会实时显示渲染效果
+3. **自定义外观**：点击"自定义背景"选择喜欢的背景色
+   - 使用缩放控制调整预览大小
+4. **导出图片**：点击"导出为 PNG"下载生成的图片
+
+## 🛠️ 技术栈
+
+- **前端框架**：原生 HTML/CSS/JavaScript
+- **Markdown 解析**：marked.js
+- **图片生成**：html2canvas
+- **图标字体**：Font Awesome
+- **样式设计**：现代化 CSS Grid/Flexbox
+
+## 📁 项目结构
+
+```
+madopic/
+├── index.html          # 主页面
+├── style.css          # 样式文件
+├── script.js          # 核心功能脚本
+└── README.md          # 项目说明
+```
+
+## 🎨 设计特色
+
+- **渐变背景**：内置8种精美渐变色彩，支持自定义
+- **卡片设计**：内容采用优雅的卡片式布局
+- **毛玻璃效果**：背景虚化，内容清晰突出
+- **响应式适配**：自动适应不同屏幕尺寸
+- **移动端优化**：生成的图片尺寸适合手机社交媒体
+
+## ⌨️ 快捷键
+
+- `Ctrl/Cmd + B`：加粗文本
+- `Ctrl/Cmd + I`：斜体文本  
+- `Ctrl/Cmd + S`：导出图片
+- `Ctrl/Cmd + +`：放大预览
+- `Ctrl/Cmd + -`：缩小预览
+- `ESC`：关闭弹出面板
+
+## 🔧 本地部署
+
+1. 克隆项目到本地
+2. 使用任意HTTP服务器启动：
+   ```bash
+   # Python 3
+   python -m http.server 8000
+   
+   # Python 2  
+   python -m SimpleHTTPServer 8000
+   
+   # Node.js
+   npx serve .
+   ```
+3. 浏览器访问 `http://localhost:8000`
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request 来帮助改进 Madopic！
+
+## 📄 开源协议
+
+本项目采用 MIT 协议开源，详见 LICENSE 文件。
+
+---
+
+**Madopic** - 让你的文字更有画面感 🎨
