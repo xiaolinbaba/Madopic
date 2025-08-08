@@ -1,0 +1,34 @@
+# 部署相关文件
+*.tar.gz
+*.zip
+
+# 日志文件
+*.log
+
+# 临时文件
+.DS_Store
+Thumbs.db
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+ehthumbs.db
+Desktop.ini
+
+# 备份文件
+*.bak
+*.backup
+
+# 测试文件
+test_*
+!test_content.md
+
+# 部署配置（如果包含敏感信息）
+deploy_config.sh
+.env
