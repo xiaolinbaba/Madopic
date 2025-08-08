@@ -2,6 +2,12 @@
 let currentZoom = 100;
 let currentBackground = 'gradient1';
 
+// ===== 导出相关常量 =====
+// 控制导出清晰度的缩放倍数范围
+const EXPORT_MIN_SCALE = 1;
+const EXPORT_MAX_SCALE = 2;
+const EXPORT_SCALE = Math.min(EXPORT_MAX_SCALE, Math.max(EXPORT_MIN_SCALE, window.devicePixelRatio || 1));
+
 // 预设背景渐变
 const backgroundPresets = {
     gradient1: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -65,7 +71,7 @@ function initializeApp() {
 // 设置事件监听器
 function setupEventListeners() {
     // Markdown 输入监听
-    markdownInput.addEventListener('input', debounce(updatePreview, 300));
+    markdownInput.addEventListener('input', debounce(updatePreview, 150));
     
     // 工具栏按钮
     setupToolbarButtons();
@@ -160,14 +166,56 @@ function handleToolbarAction(action) {
 
 // 更新预览
 function updatePreview() {
-    const markdownText = markdownInput.value;
+    const markdownText = markdownInput.value.trim();
+    
+    // 检查是否为空内容
+    if (!markdownText) {
+        showEmptyPreview();
+        return;
+    }
+    
     // 替换简化的base64为完整版本进行预览
     const processedMarkdown = replaceImageDataForPreview(markdownText);
     const htmlContent = marked.parse(processedMarkdown);
     posterContent.innerHTML = htmlContent;
     
+    // 确保内容容器可见
+    posterContent.style.display = 'block';
+    
     // 重新应用当前的字体大小设置
     applyFontSize(currentFontSize);
+    
+    // 添加淡入动画
+    posterContent.style.animation = 'none';
+    posterContent.offsetHeight; // 触发重排
+    posterContent.style.animation = 'fadeIn 0.3s ease';
+}
+
+// 显示空内容提示
+function showEmptyPreview() {
+    posterContent.innerHTML = `
+        <div class="empty-preview">
+            <div class="empty-icon">
+                <i class="fab fa-markdown"></i>
+            </div>
+            <h3>开始创作吧！</h3>
+            <p>在左侧编辑器中输入 Markdown 内容</p>
+            <div class="empty-tips">
+                <div class="tip-item">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>支持标题、列表、链接、图片等格式</span>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-keyboard"></i>
+                    <span>使用工具栏快捷按钮快速插入格式</span>
+                </div>
+                <div class="tip-item">
+                    <i class="fas fa-palette"></i>
+                    <span>点击"自定义"按钮调整背景和样式</span>
+                </div>
+            </div>
+        </div>
+    `;
     
     // 添加淡入动画
     posterContent.style.animation = 'none';
@@ -255,11 +303,11 @@ function applyCustomSettings() {
     applyBackground(backgroundCSS);
     
     // 应用字体大小设置
-    currentFontSize = parseInt(document.getElementById('fontSizeSlider').value);
+    currentFontSize = parseFloat(document.getElementById('fontSizeSlider').value);
     applyFontSize(currentFontSize);
     
     // 应用边距设置
-    currentPadding = parseInt(document.getElementById('paddingSlider').value);
+    currentPadding = parseFloat(document.getElementById('paddingSlider').value);
     applyPadding(currentPadding);
     
     // 应用宽度设置
@@ -277,50 +325,15 @@ function applyBackground(backgroundCSS) {
 }
 
 function applyFontSize(fontSize) {
-    const style = posterContent.style;
-    style.setProperty('--base-font-size', `${fontSize}px`);
-    
-    // 更新各级标题和文本大小
-    const elements = posterContent.querySelectorAll('h1, h2, h3, h4, h5, h6, p, li, span, div, blockquote, code, pre, strong, em, a');
-    elements.forEach(el => {
-        // 跳过pre内的code元素，它们有自己的字体大小
-        if (el.tagName.toLowerCase() === 'code' && el.closest('pre')) {
-            return;
-        }
-        
-        switch(el.tagName.toLowerCase()) {
-            case 'h1':
-                el.style.fontSize = `${Math.round(fontSize * 1.75)}px`;
-                break;
-            case 'h2':
-                el.style.fontSize = `${Math.round(fontSize * 1.375)}px`;
-                break;
-            case 'h3':
-                el.style.fontSize = `${Math.round(fontSize * 1.125)}px`;
-                break;
-            case 'h4':
-                el.style.fontSize = `${Math.round(fontSize * 1.05)}px`;
-                break;
-            case 'h5':
-            case 'h6':
-                el.style.fontSize = `${Math.round(fontSize * 0.95)}px`;
-                break;
-            case 'code':
-                // 行内代码稍小一些
-                el.style.fontSize = `${Math.round(fontSize * 0.875)}px`;
-                break;
-            case 'blockquote':
-                el.style.fontSize = `${Math.round(fontSize * 0.95)}px`;
-                break;
-            default:
-                // p, li, span, div, strong, em, a 等其他元素
-                el.style.fontSize = `${fontSize}px`;
-                break;
-        }
-    });
-    
-    // 设置根字体大小作为备用
-    posterContent.style.fontSize = `${fontSize}px`;
+    // 使用CSS变量统一管理字体大小，避免大量DOM操作
+    posterContent.style.setProperty('--dynamic-font-size', `${fontSize}px`);
+    posterContent.style.setProperty('--dynamic-h1-size', `${Math.round(fontSize * 1.75)}px`);
+    posterContent.style.setProperty('--dynamic-h2-size', `${Math.round(fontSize * 1.375)}px`);
+    posterContent.style.setProperty('--dynamic-h3-size', `${Math.round(fontSize * 1.125)}px`);
+    posterContent.style.setProperty('--dynamic-h4-size', `${Math.round(fontSize * 1.05)}px`);
+    posterContent.style.setProperty('--dynamic-h5-h6-size', `${Math.round(fontSize * 0.95)}px`);
+    posterContent.style.setProperty('--dynamic-code-size', `${Math.round(fontSize * 0.875)}px`);
+    posterContent.style.setProperty('--dynamic-quote-size', `${Math.round(fontSize * 0.95)}px`);
 }
 
 function applyPadding(padding) {
@@ -330,7 +343,7 @@ function applyPadding(padding) {
 
 function applyWidth(width) {
     // 调整预览区的整体宽度（导出图片的宽度）
-    markdownPoster.style.maxWidth = `${width}px`;
+    markdownPoster.style.width = `${width}px`;
 }
 
 function setupSliders() {
@@ -343,18 +356,18 @@ function setupSliders() {
     
     // 字体大小滑块
     fontSizeSlider.addEventListener('input', function() {
-        const value = this.value;
+        const value = parseFloat(this.value);
         fontSizeValue.textContent = `${value}px`;
         // 实时预览
-        applyFontSize(parseInt(value));
+        applyFontSize(value);
     });
     
     // 边距滑块
     paddingSlider.addEventListener('input', function() {
-        const value = this.value;
+        const value = parseFloat(this.value);
         paddingValue.textContent = `${value}px`;
         // 实时预览
-        applyPadding(parseInt(value));
+        applyPadding(value);
     });
     
     // 宽度滑块
@@ -371,87 +384,115 @@ function setupSliders() {
     widthValue.textContent = `${widthSlider.value}px`;
 }
 
-// 导出为 PNG
+
+// ===== 导出相关工具 =====
+/**
+ * 创建一个与预览完全一致的离屏克隆节点用于导出。
+ * 关键点：同步计算样式与实际渲染宽度，并统一为 border-box，避免行宽与换行偏差。
+ * 返回被追加到 body 的节点，调用方负责移除。
+ */
+function createExactExportNode() {
+    const clone = markdownPoster.cloneNode(true);
+    clone.id = 'madopic-export-poster';
+    const mpComputed = getComputedStyle(markdownPoster);
+    Object.assign(clone.style, {
+        position: 'fixed',
+        top: '-9999px',
+        left: '-9999px',
+        margin: '0',
+        width: `${markdownPoster.getBoundingClientRect().width}px`,
+        padding: mpComputed.padding,
+        boxSizing: 'border-box',
+        background: markdownPoster.style.background || mpComputed.background,
+        transform: 'none'
+    });
+    // 移除内部动画/滤镜但不改变布局
+    const inner = clone.querySelector('.poster-content');
+    if (inner) {
+        const pcComputed = getComputedStyle(posterContent);
+        inner.style.animation = 'none';
+        inner.style.width = `${posterContent.getBoundingClientRect().width}px`;
+        inner.style.padding = pcComputed.padding;
+        inner.style.boxSizing = 'border-box';
+        inner.style.backdropFilter = pcComputed.backdropFilter || 'none';
+        inner.style.webkitBackdropFilter = pcComputed.webkitBackdropFilter || 'none';
+    }
+    document.body.appendChild(clone);
+    return clone;
+}
+
+/**
+ * 导出为 PNG（通过克隆节点离屏渲染，保证与预览一致）。
+ * 流程：等待字体 → 克隆节点 → 读取尺寸 → html2canvas 渲染 → 透明边缘裁剪 → 触发下载 → 清理。
+ */
 async function exportToPNG() {
+    let exportNode = null;
     try {
         showNotification('正在生成图片...', 'info');
-        
-        // 隐藏可能影响截图的元素
-        const poster = markdownPoster;
-        const originalTransform = previewContent.style.transform;
-        previewContent.style.transform = 'scale(1)';
-        
-        // 等待渲染完成
-        await new Promise(resolve => {
-            requestAnimationFrame(() => {
-                setTimeout(resolve, 200);
-            });
-        });
-        
-        // 使用 html2canvas 生成图片
-        const canvas = await html2canvas(poster, {
+        exportNode = createExactExportNode();
+
+        // 等待字体与一帧渲染
+        if (document.fonts && document.fonts.ready) {
+            try { await document.fonts.ready; } catch (_) {}
+        }
+        await new Promise(r => requestAnimationFrame(r));
+
+        const rect = exportNode.getBoundingClientRect();
+        const targetWidth = Math.ceil(rect.width);
+        const targetHeight = Math.ceil(rect.height);
+
+        const canvas = await html2canvas(exportNode, {
             backgroundColor: null,
-            scale: 2, // 高清输出
+            scale: EXPORT_SCALE,
             useCORS: true,
             allowTaint: true,
             logging: false,
-            width: poster.offsetWidth,
-            height: poster.offsetHeight,
+            width: targetWidth,
+            height: targetHeight,
+            windowWidth: targetWidth,
+            windowHeight: targetHeight,
+            scrollX: 0,
+            scrollY: 0,
+            imageTimeout: 15000,
             onclone: function(clonedDoc) {
-                // 移除行内代码的样式，让它们看起来像普通文本
-                const inlineCodes = clonedDoc.querySelectorAll('code');
-                inlineCodes.forEach(code => {
-                    // 检查是否在pre标签内（代码块）
-                    const isInPre = code.closest('pre');
-                    
-                    if (!isInPre) {
-                        // 移除所有行内代码的样式，使用!important强制覆盖
-                        code.style.setProperty('background', 'transparent', 'important');
-                        code.style.setProperty('background-color', 'transparent', 'important');
-                        code.style.setProperty('padding', '0', 'important');
-                        code.style.setProperty('border-radius', '0', 'important');
-                        code.style.setProperty('font-family', 'inherit', 'important');
-                        code.style.setProperty('font-size', 'inherit', 'important');
-                        code.style.setProperty('color', 'inherit', 'important');
-                        code.style.setProperty('border', 'none', 'important');
-                        code.style.setProperty('box-shadow', 'none', 'important');
-                    }
-                });
-                
-                // 确保图片样式正确应用
-                const images = clonedDoc.querySelectorAll('.poster-content img');
-                images.forEach(img => {
-                    img.style.setProperty('border-radius', '8px', 'important');
-                    img.style.setProperty('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.1)', 'important');
-                    img.style.setProperty('display', 'block', 'important');
-                    img.style.setProperty('max-width', '100%', 'important');
-                    img.style.setProperty('height', 'auto', 'important');
-                    img.style.setProperty('margin', '16px 0', 'important');
-                    img.style.setProperty('object-fit', 'cover', 'important');
-                });
+        const clonedTarget = clonedDoc.getElementById('madopic-export-poster');
+                if (clonedTarget) {
+                    clonedTarget.style.setProperty('position', 'absolute', 'important');
+                    clonedTarget.style.setProperty('top', '0', 'important');
+                    clonedTarget.style.setProperty('left', '0', 'important');
+                    clonedTarget.style.setProperty('margin', '0', 'important');
+            clonedTarget.style.setProperty('width', `${currentWidth}px`, 'important');
+            clonedTarget.style.setProperty('padding', `${currentPadding}px`, 'important');
+            clonedTarget.style.setProperty('box-sizing', 'border-box', 'important');
+                }
+                clonedDoc.documentElement.style.setProperty('overflow', 'hidden', 'important');
+                clonedDoc.body.style.setProperty('margin', '0', 'important');
+                clonedDoc.body.style.setProperty('padding', '0', 'important');
             }
         });
-        
-        // 恢复原始缩放
-        previewContent.style.transform = originalTransform;
-        
-        // 下载图片
+
+        const trimmedCanvas = trimTransparentEdges(canvas);
+        const outputCanvas = trimmedCanvas || canvas;
+
         const link = document.createElement('a');
         link.download = `madopic-${getFormattedTimestamp()}.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.href = outputCanvas.toDataURL('image/png', 1.0);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         showNotification('图片导出成功！', 'success');
-        
     } catch (error) {
         console.error('导出失败:', error);
         showNotification('导出失败，请重试', 'error');
+    } finally {
+        if (exportNode && exportNode.parentNode) {
+            exportNode.parentNode.removeChild(exportNode);
+        }
     }
 }
 
-// 通知系统
+// ===== 通知系统 =====
 function showNotification(message, type = 'info') {
     // 创建通知元素
     const notification = document.createElement('div');
@@ -524,7 +565,7 @@ function getNotificationColor(type) {
     return colors[type] || colors.info;
 }
 
-// 键盘快捷键
+// ===== 键盘快捷键 =====
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey || e.metaKey) {
@@ -573,12 +614,9 @@ function debounce(func, wait) {
     };
 }
 
-// 工具函数：获取当前时间戳
-function getCurrentTimestamp() {
-    return new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-}
 
-// 错误处理
+
+// ===== 错误处理 =====
 window.addEventListener('error', function(e) {
     console.error('应用错误:', e.error);
     showNotification('应用出现错误，请刷新页面重试', 'error');
@@ -764,6 +802,17 @@ function getFormattedTimestamp() {
     return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
+// 获取当前配置（便于调试与外部接入）
+function getCurrentMadopicConfig() {
+    return {
+        width: currentWidth,
+        padding: currentPadding,
+        fontSize: currentFontSize,
+        background: markdownPoster.style.background,
+        exportScale: EXPORT_SCALE
+    };
+}
+
 // 导出全局对象供调试使用
 window.MadopicApp = {
     updatePreview,
@@ -772,5 +821,54 @@ window.MadopicApp = {
     MarkdownHelper,
     showNotification,
     insertImage,
-    handleImageFile
+    handleImageFile,
+    getCurrentMadopicConfig
 };
+
+/**
+ * 裁剪画布四周完全透明的像素，去除导出后可能出现的空白边缘。
+ * 返回新的裁剪画布；若无需裁剪则返回 null。
+ */
+function trimTransparentEdges(sourceCanvas) {
+    const ctx = sourceCanvas.getContext('2d');
+    const { width, height } = sourceCanvas;
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+
+    let top = 0;
+    let bottom = height - 1;
+    let left = 0;
+    let right = width - 1;
+    const isRowTransparent = (y) => {
+        const base = y * width * 4;
+        for (let x = 0; x < width; x++) {
+            if (data[base + x * 4 + 3] !== 0) return false;
+        }
+        return true;
+    };
+    const isColTransparent = (x, t, b) => {
+        for (let y = t; y <= b; y++) {
+            const idx = (y * width + x) * 4 + 3;
+            if (data[idx] !== 0) return false;
+        }
+        return true;
+    };
+
+    while (top <= bottom && isRowTransparent(top)) top++;
+    while (bottom >= top && isRowTransparent(bottom)) bottom--;
+    while (left <= right && isColTransparent(left, top, bottom)) left++;
+    while (right >= left && isColTransparent(right, top, bottom)) right--;
+
+    // 若全透明或无需要裁剪
+    if (top === 0 && left === 0 && right === width - 1 && bottom === height - 1) return null;
+    if (top > bottom || left > right) return null;
+
+    const newWidth = right - left + 1;
+    const newHeight = bottom - top + 1;
+    const trimmed = document.createElement('canvas');
+    trimmed.width = newWidth;
+    trimmed.height = newHeight;
+    const tctx = trimmed.getContext('2d');
+    tctx.drawImage(sourceCanvas, left, top, newWidth, newHeight, 0, 0, newWidth, newHeight);
+    return trimmed;
+}
