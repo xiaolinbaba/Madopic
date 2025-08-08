@@ -889,3 +889,186 @@ select {
 .github-link i {
     color: inherit;
 }
+
+/* ===== KaTeX 数学公式样式 ===== */
+/* 确保数学公式与主题样式一致 */
+.katex {
+    font-size: 1em !important;
+    color: inherit;
+}
+
+/* 行内数学公式样式 */
+.katex-display {
+    margin: 1em 0;
+    text-align: center;
+}
+
+/* 数学公式错误样式 */
+.katex-error {
+    color: #dc2626 !important;
+    background-color: rgba(220, 38, 38, 0.1);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+}
+
+/* 确保数学公式在不同背景下可见 */
+.poster-content .katex {
+    color: inherit;
+}
+
+/* 数学公式在深色背景下的适配 */
+.poster-content[data-theme="dark"] .katex {
+    color: #ffffff;
+}
+
+/* 数学公式字体大小响应式调整 */
+.poster-content .katex {
+    font-size: var(--dynamic-font-size, 16px) !important;
+}
+
+.poster-content .katex-display {
+    font-size: calc(var(--dynamic-font-size, 16px) * 1.1) !important;
+}
+
+/* 确保数学公式不会被截断 */
+.katex-html {
+    overflow: visible;
+}
+
+/* 数学公式选择样式 */
+.katex * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+/* ===== Mermaid 图表样式 ===== */
+/* 图表容器基础样式 */
+.mermaid-container {
+    margin: 1.5em 0;
+    text-align: center;
+    overflow: visible;
+    background: transparent;
+}
+
+/* 图表SVG样式 */
+.mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+    background: transparent;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 图表错误显示样式 */
+.diagram-error-container {
+    margin: 1.5em 0;
+    padding: 1rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.diagram-error {
+    color: #dc2626;
+    font-family: var(--font-mono);
+}
+
+.diagram-error i {
+    font-size: 1.5em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.error-title {
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 0.5rem;
+}
+
+.error-message {
+    font-size: 0.9em;
+    opacity: 0.8;
+    font-family: var(--font-mono);
+    word-break: break-word;
+}
+
+/* 图表在不同主题下的适配 */
+.poster-content .mermaid-diagram svg {
+    filter: none;
+    transition: filter 0.3s ease;
+}
+
+/* 深色背景下的图表适配 */
+.poster-content[data-theme="dark"] .mermaid-diagram svg {
+    filter: invert(0.9) hue-rotate(180deg);
+}
+
+/* 图表响应式设计 */
+@media (max-width: 768px) {
+    .mermaid-container {
+        margin: 1em 0;
+    }
+    
+    .mermaid-diagram svg {
+        max-width: 100%;
+        font-size: 12px;
+    }
+}
+
+/* 图表文本选择样式 */
+.mermaid-diagram * {
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+/* 图表加载状态 */
+.mermaid-container[data-loading="true"] {
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 8px;
+}
+
+.mermaid-container[data-loading="true"]::before {
+    content: "正在渲染图表...";
+    color: #6366f1;
+    font-size: 0.9em;
+    opacity: 0.7;
+}
+
+/* 确保图表不会溢出容器 */
+.poster-content .mermaid-container {
+    overflow: hidden;
+    word-wrap: break-word;
+}
+
+/* 图表字体大小响应式调整 */
+.poster-content .mermaid-diagram {
+    font-size: calc(var(--dynamic-font-size, 16px) * 0.9);
+}
+
+/* 导出时的优化 */
+.export-node .mermaid-diagram svg {
+    background: white;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* 工具栏分隔符样式 */
+.tool-separator {
+    width: 1px;
+    height: 20px;
+    background-color: #ddd;
+    margin: 0 8px;
+    display: inline-block;
+    vertical-align: middle;
+}
