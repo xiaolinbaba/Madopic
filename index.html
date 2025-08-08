@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Madopic - Markdown to Picture</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="alternate icon" href="favicon.svg">
-    <link rel="apple-touch-icon" href="favicon.svg">
+    <link rel="apple-touch-icon" href="madopic.png">
     <meta name="theme-color" content="#6366f1">
     <meta name="description" content="精美的 Markdown 转图片工具，轻松制作社交媒体图片">
     <link rel="manifest" href="manifest.json">
@@ -132,14 +131,14 @@
                     <div class="option-group">
                         <label>预设背景：</label>
                         <div class="preset-backgrounds">
-                            <div class="bg-preset active" data-bg="gradient1" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient2" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient3" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient4" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient5" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient6" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient7" style="background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"></div>
-                            <div class="bg-preset" data-bg="gradient8" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)"></div>
+                            <div class="bg-preset active" data-bg="gradient1"></div>
+                            <div class="bg-preset" data-bg="gradient2"></div>
+                            <div class="bg-preset" data-bg="gradient3"></div>
+                            <div class="bg-preset" data-bg="gradient4"></div>
+                            <div class="bg-preset" data-bg="gradient5"></div>
+                            <div class="bg-preset" data-bg="gradient6"></div>
+                            <div class="bg-preset" data-bg="gradient7"></div>
+                            <div class="bg-preset" data-bg="gradient8"></div>
                         </div>
                     </div>
                     <div class="option-group">
@@ -174,7 +173,7 @@
                     <div class="option-group">
                         <label>文字大小：</label>
                         <div class="slider-group">
-                            <input type="range" id="fontSizeSlider" min="12" max="20" value="16" step="1">
+                            <input type="range" id="fontSizeSlider" min="12" max="20" value="16" step="0.5">
                             <span class="slider-value" id="fontSizeValue">16px</span>
                         </div>
                     </div>
@@ -186,14 +185,14 @@
                     <div class="option-group">
                         <label>整体宽度：</label>
                         <div class="slider-group">
-                            <input type="range" id="widthSlider" min="400" max="800" value="640" step="20">
+                            <input type="range" id="widthSlider" min="480" max="800" value="640" step="20">
                             <span class="slider-value" id="widthValue">640px</span>
                         </div>
                     </div>
                     <div class="option-group">
                         <label>卡片边距：</label>
                         <div class="slider-group">
-                            <input type="range" id="paddingSlider" min="20" max="60" value="40" step="5">
+                            <input type="range" id="paddingSlider" min="20" max="60" value="40" step="2.5">
                             <span class="slider-value" id="paddingValue">40px</span>
                         </div>
                     </div>
