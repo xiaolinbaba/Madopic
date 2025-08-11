@@ -88,7 +88,34 @@ body {
 .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+}
+
+.mode-group {
+    display: flex;
+    gap: 8px;
+    margin-right: 16px; /* 与右侧自定义/导出拉开距离 */
+}
+
+.btn-toggle.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: transparent;
+}
+
+.btn-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 不同模式选中态颜色 */
+#modeXhsBtn.active {
+    background: #ef4444; /* 红色 */
+}
+
+#modePyqBtn.active {
+    background: #10b981; /* 绿色 */
 }
 
 /* 按钮样式 */
@@ -260,6 +287,15 @@ body {
     overflow: hidden;
 }
 
+/* 小红书模式下，为了与导出一致，使用 border-box 宽度模型 */
+.markdown-poster[data-mode="xhs"] {
+    box-sizing: border-box;
+}
+
+.markdown-poster[data-mode="pyq"] {
+    box-sizing: border-box;
+}
+
 .markdown-poster::before {
     content: '';
     position: absolute;
@@ -423,6 +459,14 @@ body {
     color: var(--text-light);
     margin-bottom: 16px;
     line-height: 1.7;
+}
+
+/* Markdown 空行（可视化占位） */
+.poster-content .md-empty-line {
+    height: 1em;
+    line-height: 1em;
+    margin: 8px 0;
+    opacity: 0.2;
 }
 
 .poster-content em {
