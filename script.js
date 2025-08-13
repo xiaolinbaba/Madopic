@@ -114,7 +114,7 @@ function setupEventListeners() {
     setupSliders();
     
     // 导出功能
-    document.getElementById('exportBtn').addEventListener('click', exportToPNG);
+    setupExportDropdown();
     setupModeButtons();
     
     // 背景预设选择
@@ -128,6 +128,42 @@ function setupEventListeners() {
     
     // 键盘快捷键
     setupKeyboardShortcuts();
+}
+
+// 设置导出下拉菜单
+function setupExportDropdown() {
+    const exportBtn = document.getElementById('exportBtn');
+    const exportDropdown = document.querySelector('.export-dropdown');
+    const exportMenu = document.getElementById('exportMenu');
+    const exportOptions = document.querySelectorAll('.export-option');
+
+    if (!exportBtn || !exportDropdown || !exportMenu) return;
+
+    // 点击导出按钮切换下拉菜单
+    exportBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        exportDropdown.classList.toggle('open');
+    });
+
+    // 点击导出选项
+    exportOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const type = option.dataset.type;
+            exportDropdown.classList.remove('open');
+            
+            if (type === 'png') {
+                exportToPNG();
+            } else if (type === 'pdf') {
+                exportToPDF();
+            }
+        });
+    });
+
+    // 点击页面其他地方关闭下拉菜单
+    document.addEventListener('click', () => {
+        exportDropdown.classList.remove('open');
+    });
 }
 
 // 模式按钮绑定
@@ -742,6 +778,89 @@ async function exportToPNG() {
     }
 }
 
+async function exportToPDF() {
+    let exportNode = null;
+    try {
+        showNotification('正在生成 PDF...', 'info');
+        exportNode = createExactExportNode();
+
+        // 预处理导出节点中的图片
+        try {
+            await prepareImagesForExport(exportNode);
+        } catch (_) {
+            // 忽略单个图片处理失败
+        }
+
+        // 等待字体与一帧渲染
+        if (document.fonts && document.fonts.ready) {
+            try { await document.fonts.ready; } catch (_) {}
+        }
+        await new Promise(r => requestAnimationFrame(r));
+
+        const rect = exportNode.getBoundingClientRect();
+        const targetWidth = Math.ceil(rect.width);
+        const targetHeight = Math.ceil(rect.height);
+
+        const tryScales = getExportScaleCandidates(EXPORT_SCALE);
+        const canvas = await renderWithFallbackScales(exportNode, targetWidth, targetHeight, tryScales);
+
+        const trimmedCanvas = currentMode === 'free' ? trimTransparentEdges(canvas) : null;
+        const outputCanvas = trimmedCanvas || canvas;
+
+        // 创建 PDF
+        const { jsPDF } = window.jspdf;
+        
+        const canvasWidth = outputCanvas.width;
+        const canvasHeight = outputCanvas.height;
+        
+        // 计算 PDF 页面尺寸（毫米）
+        // 默认使用 A4 纸张，但根据内容比例调整
+        const A4_WIDTH_MM = 210;
+        const A4_HEIGHT_MM = 297;
+        const aspectRatio = canvasWidth / canvasHeight;
+        
+        let pdfWidth, pdfHeight, orientation;
+        
+        if (aspectRatio > 1) {
+            orientation = 'landscape';
+            pdfWidth = A4_HEIGHT_MM;
+            pdfHeight = A4_WIDTH_MM;
+            
+            if (aspectRatio > pdfWidth / pdfHeight) {
+                pdfHeight = pdfWidth / aspectRatio;
+            }
+        } else {
+            orientation = 'portrait';
+            pdfWidth = A4_WIDTH_MM;
+            pdfHeight = A4_HEIGHT_MM;
+            
+            if (aspectRatio < pdfWidth / pdfHeight) {
+                pdfWidth = pdfHeight * aspectRatio;
+            }
+        }
+
+        const pdf = new jsPDF({
+            orientation: orientation,
+            unit: 'mm',
+            format: [pdfWidth, pdfHeight]
+        });
+
+        const imgData = outputCanvas.toDataURL('image/jpeg', 0.95);
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        pdf.save(`madopic-${getFormattedTimestamp()}.pdf`);
+
+        showNotification('PDF 导出成功！', 'success');
+    } catch (error) {
+        console.error('PDF 导出失败:', error);
+        showNotification('PDF 导出失败，请重试', 'error');
+    } finally {
+        if (exportNode && exportNode.parentNode) {
+            exportNode.parentNode.removeChild(exportNode);
+        }
+    }
+}
+
 /**
  * 生成按优先级降序的导出 scale 备选列表。
  * 例如：首选 s，然后尝试 2、1.5、1.25、1。
@@ -1138,6 +1257,7 @@ function getCurrentMadopicConfig() {
 window.MadopicApp = {
     updatePreview,
     exportToPNG,
+    exportToPDF,
     applyBackground,
     MarkdownHelper,
     showNotification,

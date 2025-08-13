@@ -154,6 +154,66 @@ body {
     transform: translateY(-1px);
 }
 
+/* 导出下拉菜单 */
+.export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.export-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    min-width: 160px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.export-dropdown.open .export-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.export-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    width: 100%;
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    text-align: left;
+}
+
+.export-option:hover {
+    background-color: var(--background-gray);
+}
+
+.export-option:first-child {
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.export-option:last-child {
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.export-option i {
+    color: var(--primary-color);
+    width: 16px;
+}
+
 /* 主内容区域 */
 .main-content {
     flex: 1;
