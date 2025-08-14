@@ -154,66 +154,6 @@ body {
     transform: translateY(-1px);
 }
 
-/* 导出下拉菜单 */
-.export-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.export-menu {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background: white;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    min-width: 160px;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.2s ease;
-}
-
-.export-dropdown.open .export-menu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.export-option {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    width: 100%;
-    border: none;
-    background: none;
-    font-size: 14px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    text-align: left;
-}
-
-.export-option:hover {
-    background-color: var(--background-gray);
-}
-
-.export-option:first-child {
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-}
-
-.export-option:last-child {
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-}
-
-.export-option i {
-    color: var(--primary-color);
-    width: 16px;
-}
-
 /* 主内容区域 */
 .main-content {
     flex: 1;
@@ -474,9 +414,8 @@ body {
     border-collapse: collapse;
     margin: 16px 0;
     font-size: 14px;
-    overflow-x: auto;
-    display: block;
-    white-space: nowrap;
+    display: table;
+    table-layout: fixed;
 }
 
 .poster-content table th,
@@ -484,6 +423,9 @@ body {
     padding: 8px 12px;
     border: 1px solid var(--border-color);
     text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
 }
 
 .poster-content table th {
@@ -610,9 +552,12 @@ body {
     color: #e2e8f0;
     padding: 16px;
     border-radius: var(--border-radius);
-    overflow-x: auto;
     margin: 16px 0;
     display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
 }
 
 .poster-content pre code {
@@ -992,4 +937,82 @@ select {
 
 .github-link i {
     color: inherit;
+}
+
+/* 工具分隔线样式 */
+.tool-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 8px;
+    flex-shrink: 0;
+}
+
+
+
+/* KaTeX 数学公式样式 */
+.katex {
+    font-size: 1.1em;
+}
+
+.katex-display {
+    margin: 16px 0;
+    text-align: center;
+}
+
+.katex-error {
+    color: #cc0000;
+    background: #ffe6e6;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+/* Mermaid 图表容器样式 */
+.mermaid-diagram {
+    margin: 16px 0;
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+}
+
+.diagram-error-container {
+    margin: 16px 0;
+    text-align: center;
+}
+
+.diagram-error {
+    display: inline-block;
+    padding: 20px;
+    border: 2px dashed #ff6b6b;
+    border-radius: 8px;
+    background-color: #ffe0e0;
+    color: #d63031;
+    font-family: monospace;
+}
+
+.error-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.error-message {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* ECharts 容器样式 */
+.echarts-container {
+    margin: 16px 0;
+    min-height: 400px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
 }
