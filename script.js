@@ -2,6 +2,359 @@
 let currentZoom = 100;
 let currentBackground = 'gradient1';
 
+// ===== 数学公式渲染器 =====
+class MathRenderer {
+    constructor() {
+        this.isKaTeXLoaded = false;
+        this.checkKaTeXAvailability();
+    }
+
+    checkKaTeXAvailability() {
+        this.isKaTeXLoaded = typeof katex !== 'undefined' && typeof renderMathInElement !== 'undefined';
+        if (!this.isKaTeXLoaded) {
+            console.warn('KaTeX not loaded. Math formulas will not be rendered.');
+        } else {
+            // 检查mhchem扩展是否可用
+            const hasMhchem = typeof katex.__defineMacro !== 'undefined' || 
+                              (window.katex && window.katex.__plugins && window.katex.__plugins['mhchem']);
+            if (hasMhchem) {
+                console.log('KaTeX with mhchem extension loaded successfully');
+            } else {
+                console.warn('KaTeX loaded but mhchem extension may not be available');
+            }
+        }
+    }
+
+    renderMath(element) {
+        if (!this.isKaTeXLoaded) {
+            console.warn('KaTeX not available for math rendering');
+            return;
+        }
+
+        try {
+            renderMathInElement(element, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false},
+                    {left: '\\[', right: '\\]', display: true},
+                    {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false,
+                trust: true,
+                macros: {
+                    // 物理常量
+                    '\\emc': 'E=mc^{2}',
+                    '\\hbar': '\\hslash',
+                    '\\kb': 'k_B',
+                    '\\NA': 'N_A',
+                    // 常用符号
+                    '\\R': '\\mathbb{R}',
+                    '\\C': '\\mathbb{C}',
+                    '\\N': '\\mathbb{N}',
+                    '\\Z': '\\mathbb{Z}',
+                    '\\Q': '\\mathbb{Q}',
+                    // 微积分
+                    '\\dd': '\\mathrm{d}',
+                    '\\dv': ['\\frac{\\mathrm{d}#1}{\\mathrm{d}#2}', 2],
+                    '\\pdv': ['\\frac{\\partial#1}{\\partial#2}', 2],
+                    // 向量
+                    '\\vb': ['\\mathbf{#1}', 1],
+                    '\\vu': ['\\hat{\\mathbf{#1}}', 1],
+                    // 物理单位
+                    '\\unit': ['\\,\\mathrm{#1}', 1]
+                },
+                fleqn: false,
+                displayMode: false
+            });
+        } catch (error) {
+            console.error('Math rendering error:', error);
+            this.showMathError(element, error.message);
+        }
+    }
+
+    showMathError(element, errorMessage) {
+        const errorElements = element.querySelectorAll('.katex-error');
+        errorElements.forEach(errorEl => {
+            errorEl.style.color = '#cc0000';
+            errorEl.title = `Math Error: ${errorMessage}`;
+        });
+    }
+
+    // 预处理Markdown中的数学公式
+    preprocessMath(markdown) {
+        // 处理质能守恒公式的特殊情况
+        markdown = markdown.replace(/E\s*=\s*mc\^?2/g, '$E=mc^{2}$');
+        
+        // 处理其他常见物理公式
+        markdown = markdown.replace(/F\s*=\s*ma/g, '$F=ma$');
+        markdown = markdown.replace(/v\s*=\s*u\s*\+\s*at/g, '$v=u+at$');
+        markdown = markdown.replace(/s\s*=\s*ut\s*\+\s*½at²/g, '$s=ut+\\frac{1}{2}at^{2}$');
+        markdown = markdown.replace(/v²\s*=\s*u²\s*\+\s*2as/g, '$v^{2}=u^{2}+2as$');
+        
+        // 处理数学常量
+        markdown = markdown.replace(/π/g, '$\\pi$');
+        markdown = markdown.replace(/∞/g, '$\\infty$');
+        markdown = markdown.replace(/±/g, '$\\pm$');
+        markdown = markdown.replace(/≤/g, '$\\leq$');
+        markdown = markdown.replace(/≥/g, '$\\geq$');
+        markdown = markdown.replace(/≠/g, '$\\neq$');
+        markdown = markdown.replace(/∈/g, '$\\in$');
+        markdown = markdown.replace(/∉/g, '$\\notin$');
+        markdown = markdown.replace(/⊆/g, '$\\subseteq$');
+        markdown = markdown.replace(/⊇/g, '$\\supseteq$');
+        markdown = markdown.replace(/∪/g, '$\\cup$');
+        markdown = markdown.replace(/∩/g, '$\\cap$');
+        markdown = markdown.replace(/∅/g, '$\\emptyset$');
+        
+        // 处理希腊字母
+        markdown = markdown.replace(/α/g, '$\\alpha$');
+        markdown = markdown.replace(/β/g, '$\\beta$');
+        markdown = markdown.replace(/γ/g, '$\\gamma$');
+        markdown = markdown.replace(/δ/g, '$\\delta$');
+        markdown = markdown.replace(/ε/g, '$\\epsilon$');
+        markdown = markdown.replace(/θ/g, '$\\theta$');
+        markdown = markdown.replace(/λ/g, '$\\lambda$');
+        markdown = markdown.replace(/μ/g, '$\\mu$');
+        markdown = markdown.replace(/σ/g, '$\\sigma$');
+        markdown = markdown.replace(/φ/g, '$\\phi$');
+        markdown = markdown.replace(/ω/g, '$\\omega$');
+        
+        return markdown;
+    }
+}
+
+// 创建全局数学渲染器实例
+const mathRenderer = new MathRenderer();
+
+// ===== 图表渲染器 =====
+class DiagramRenderer {
+    constructor() {
+        this.isMermaidLoaded = false;
+        this.mermaidConfig = {
+            startOnLoad: false,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#6366f1',
+                primaryTextColor: '#1f2937',
+                primaryBorderColor: '#4f46e5',
+                lineColor: '#6b7280',
+                secondaryColor: '#f3f4f6',
+                tertiaryColor: '#ffffff'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            },
+            sequence: {
+                useMaxWidth: true,
+                wrap: true
+            },
+            gantt: {
+                useMaxWidth: true
+            }
+        };
+        this.checkMermaidAvailability();
+    }
+
+    checkMermaidAvailability() {
+        this.isMermaidLoaded = typeof mermaid !== 'undefined';
+        if (this.isMermaidLoaded) {
+            try {
+                mermaid.initialize(this.mermaidConfig);
+                console.log('Mermaid initialized successfully');
+            } catch (error) {
+                console.error('Mermaid initialization error:', error);
+                this.isMermaidLoaded = false;
+            }
+        } else {
+            console.warn('Mermaid not loaded. Diagrams will not be rendered.');
+        }
+    }
+
+    async renderDiagram(element, diagramCode, diagramId) {
+        if (!this.isMermaidLoaded) {
+            console.warn('Mermaid not available for diagram rendering');
+            this.showDiagramError(element, 'Mermaid library not loaded');
+            return;
+        }
+
+        try {
+            // 清除之前的内容
+            element.innerHTML = '';
+            
+            // 渲染图表
+            const { svg } = await mermaid.render(diagramId, diagramCode);
+            element.innerHTML = svg;
+            
+            // 添加图表容器样式
+            element.classList.add('mermaid-diagram');
+            
+        } catch (error) {
+            console.error('Diagram rendering error:', error);
+            this.showDiagramError(element, error.message);
+        }
+    }
+
+    showDiagramError(element, errorMessage) {
+        element.innerHTML = `
+            <div class="diagram-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div class="error-title">图表渲染错误</div>
+                <div class="error-message">${errorMessage}</div>
+            </div>
+        `;
+        element.classList.add('diagram-error-container');
+    }
+
+    // 预处理Markdown中的图表代码
+    preprocessDiagram(markdown) {
+        // 为每个mermaid代码块生成唯一ID
+        let diagramCounter = 0;
+        return markdown.replace(/```mermaid\s*\n([\s\S]*?)\n```/g, (match, code) => {
+            const diagramId = `mermaid-diagram-${++diagramCounter}`;
+            return `<div class="mermaid-container" data-diagram-id="${diagramId}" data-diagram-code="${encodeURIComponent(code.trim())}"></div>`;
+        });
+    }
+
+    // 渲染页面中的所有图表
+    async renderDiagrams(container) {
+        if (!this.isMermaidLoaded) {
+            return;
+        }
+
+        const diagramContainers = container.querySelectorAll('.mermaid-container');
+        
+        for (const diagramContainer of diagramContainers) {
+            const diagramId = diagramContainer.getAttribute('data-diagram-id');
+            const diagramCode = decodeURIComponent(diagramContainer.getAttribute('data-diagram-code'));
+            
+            if (diagramId && diagramCode) {
+                await this.renderDiagram(diagramContainer, diagramCode, diagramId);
+            }
+        }
+    }
+
+    // 设置主题
+    setTheme(theme) {
+        if (!this.isMermaidLoaded) {
+            return;
+        }
+
+        this.mermaidConfig.theme = theme;
+        try {
+            mermaid.initialize(this.mermaidConfig);
+        } catch (error) {
+            console.error('Theme update error:', error);
+        }
+    }
+}
+
+// 创建全局图表渲染器实例
+const diagramRenderer = new DiagramRenderer();
+
+// ECharts 渲染器类
+class EChartsRenderer {
+    constructor() {
+        this.isEChartsLoaded = false;
+        this.checkEChartsAvailability();
+    }
+
+    checkEChartsAvailability() {
+        this.isEChartsLoaded = typeof echarts !== 'undefined';
+        if (!this.isEChartsLoaded) {
+            console.warn('ECharts not loaded. ECharts diagrams will not be rendered.');
+        }
+    }
+
+    async renderEChart(element, chartConfig, chartId) {
+        if (!this.isEChartsLoaded) {
+            console.warn('ECharts not available for chart rendering');
+            this.showEChartError(element, 'ECharts library not loaded');
+            return;
+        }
+
+        try {
+            // 清除之前的内容
+            element.innerHTML = '';
+            
+            // 创建图表容器
+            const chartContainer = document.createElement('div');
+            chartContainer.id = chartId;
+            chartContainer.style.width = '100%';
+            chartContainer.style.height = '400px';
+            chartContainer.style.minHeight = '300px';
+            element.appendChild(chartContainer);
+
+            // 解析配置
+            let config;
+            if (typeof chartConfig === 'string') {
+                config = JSON.parse(chartConfig);
+            } else {
+                config = chartConfig;
+            }
+
+            // 初始化图表
+            const chart = echarts.init(chartContainer);
+            chart.setOption(config);
+
+            // 响应式调整
+            const resizeObserver = new ResizeObserver(() => {
+                chart.resize();
+            });
+            resizeObserver.observe(chartContainer);
+
+            // 存储图表实例以便后续操作
+            chartContainer._echartsInstance = chart;
+            chartContainer._resizeObserver = resizeObserver;
+
+        } catch (error) {
+            console.error('ECharts rendering error:', error);
+            this.showEChartError(element, error.message);
+        }
+    }
+
+    showEChartError(element, errorMessage) {
+        element.innerHTML = `
+            <div class="echarts-error" style="
+                padding: 20px;
+                border: 2px dashed #ff6b6b;
+                border-radius: 8px;
+                background-color: #ffe0e0;
+                color: #d63031;
+                text-align: center;
+                font-family: monospace;
+            ">
+                <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+                ECharts Error: ${errorMessage}
+            </div>
+        `;
+    }
+
+    preprocessECharts(markdown) {
+        // 处理 ```echarts 代码块
+        return markdown.replace(/```echarts\s*\n([\s\S]*?)\n```/g, (match, code) => {
+            const chartId = 'echarts-' + Math.random().toString(36).substr(2, 9);
+            return `<div class="echarts-container" data-echarts-id="${chartId}" data-echarts-config="${encodeURIComponent(code.trim())}"></div>`;
+        });
+    }
+
+    async renderECharts(container) {
+        const echartsElements = container.querySelectorAll('.echarts-container');
+        
+        for (const element of echartsElements) {
+            const chartId = element.getAttribute('data-echarts-id');
+            const configData = decodeURIComponent(element.getAttribute('data-echarts-config'));
+            
+            await this.renderEChart(element, configData, chartId);
+        }
+    }
+}
+
+// 创建全局 ECharts 渲染器实例
+const echartsRenderer = new EChartsRenderer();
+
 // ===== 导出相关常量 =====
 // 控制导出清晰度的缩放倍数范围
 const EXPORT_MIN_SCALE = 2;
@@ -87,6 +440,9 @@ function initializeApp() {
     applyPadding(currentPadding);
     applyWidth(currentWidth);
     
+    // 初始化图表渲染器主题
+    diagramRenderer.setTheme('default');
+    
     // 更新缩放显示
     updateZoomDisplay();
 }
@@ -114,7 +470,7 @@ function setupEventListeners() {
     setupSliders();
     
     // 导出功能
-    setupExportDropdown();
+    setupExportButtons();
     setupModeButtons();
     
     // 背景预设选择
@@ -130,40 +486,18 @@ function setupEventListeners() {
     setupKeyboardShortcuts();
 }
 
-// 设置导出下拉菜单
-function setupExportDropdown() {
-    const exportBtn = document.getElementById('exportBtn');
-    const exportDropdown = document.querySelector('.export-dropdown');
-    const exportMenu = document.getElementById('exportMenu');
-    const exportOptions = document.querySelectorAll('.export-option');
+// 设置导出按钮事件
+function setupExportButtons() {
+    const exportPngBtn = document.getElementById('exportPngBtn');
+    const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-    if (!exportBtn || !exportDropdown || !exportMenu) return;
+    if (exportPngBtn) {
+        exportPngBtn.addEventListener('click', exportToPNG);
+    }
 
-    // 点击导出按钮切换下拉菜单
-    exportBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        exportDropdown.classList.toggle('open');
-    });
-
-    // 点击导出选项
-    exportOptions.forEach(option => {
-        option.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const type = option.dataset.type;
-            exportDropdown.classList.remove('open');
-            
-            if (type === 'png') {
-                exportToPNG();
-            } else if (type === 'pdf') {
-                exportToPDF();
-            }
-        });
-    });
-
-    // 点击页面其他地方关闭下拉菜单
-    document.addEventListener('click', () => {
-        exportDropdown.classList.remove('open');
-    });
+    if (exportPdfBtn) {
+        exportPdfBtn.addEventListener('click', exportToPDF);
+    }
 }
 
 // 模式按钮绑定
@@ -280,8 +614,35 @@ function handleToolbarAction(action) {
         case 'image':
             insertImage();
             return;
+        case 'flowchart':
+            MarkdownHelper.insertFlowchart();
+            return;
+        case 'sequence':
+            MarkdownHelper.insertSequenceDiagram();
+            return;
+        case 'gantt':
+            MarkdownHelper.insertGanttChart();
+            return;
+        case 'pie':
+            MarkdownHelper.insertPieChart();
+            return;
+        case 'math':
+            MarkdownHelper.insertMathFormulas();
+            return;
+        case 'physics':
+            MarkdownHelper.insertPhysicsFormulas();
+            return;
+        case 'chemistry':
+            MarkdownHelper.insertChemistryFormulas();
+            return;
+        case 'echarts':
+            MarkdownHelper.insertEChartsTemplate();
+            return;
+        case 'einstein':
+            MarkdownHelper.insertEinsteinFormula();
+            return;
         case 'empty-line':
-            // 插入可在预览中可见的“Markdown 空行”占位段落
+            // 插入可在预览中可见的"Markdown 空行"占位段落
             insertText = `\n\n<p class="md-empty-line">&nbsp;</p>\n\n`;
             cursorPos = start + insertText.length;
             break;
@@ -299,7 +660,7 @@ function handleToolbarAction(action) {
 }
 
 // 更新预览
-function updatePreview() {
+async function updatePreview() {
     const markdownText = markdownInput.value.trim();
     
     // 检查是否为空内容
@@ -308,8 +669,18 @@ function updatePreview() {
         return;
     }
     
+    // 预处理数学公式
+    let processedMarkdown = mathRenderer.preprocessMath(markdownText);
+    
+    // 预处理图表
+    processedMarkdown = diagramRenderer.preprocessDiagram(processedMarkdown);
+    
+    // 预处理 ECharts 图表
+    processedMarkdown = echartsRenderer.preprocessECharts(processedMarkdown);
+    
     // 替换简化的base64为完整版本进行预览
-    const processedMarkdown = replaceImageDataForPreview(markdownText);
+    processedMarkdown = replaceImageDataForPreview(processedMarkdown);
+    
     // 仅在已完成至少一次渲染后，且内容确实未变化时跳过
     if (hasInitialPreviewRendered && processedMarkdown === lastRenderedMarkdown) {
         return;
@@ -324,7 +695,15 @@ function updatePreview() {
         htmlContent = '<p style="color:#ef4444">渲染失败，请检查 Markdown 内容。</p>';
     }
     posterContent.innerHTML = htmlContent;
-    // 注意：预览阶段不强制设置跨域属性，避免某些图床因 CORS 导致直接加载失败
+    
+    // 渲染数学公式
+    mathRenderer.renderMath(posterContent);
+    
+    // 渲染图表
+    await diagramRenderer.renderDiagrams(posterContent);
+    
+    // 渲染 ECharts 图表
+    await echartsRenderer.renderECharts(posterContent);
     
     // 确保内容容器可见
     posterContent.style.display = 'block';
@@ -560,7 +939,7 @@ function setupSliders() {
  * 关键点：同步计算样式与实际渲染宽度，并统一为 border-box，避免行宽与换行偏差。
  * 返回被追加到 body 的节点，调用方负责移除。
  */
-function createExactExportNode() {
+async function createExactExportNode() {
     const clone = markdownPoster.cloneNode(true);
     clone.id = 'madopic-export-poster';
     const mpComputed = getComputedStyle(markdownPoster);
@@ -622,6 +1001,33 @@ function createExactExportNode() {
         }
     }
     document.body.appendChild(clone);
+    
+    // 为导出节点重新渲染数学公式
+    const cloneContent = clone.querySelector('.poster-content');
+    if (cloneContent) {
+        mathRenderer.renderMath(cloneContent);
+        
+        // 为导出节点的Mermaid图表生成新的唯一ID，避免与原始预览区冲突
+        const mermaidContainers = cloneContent.querySelectorAll('.mermaid-container');
+        mermaidContainers.forEach((container, index) => {
+            const timestamp = Date.now();
+            const newId = `export-mermaid-${timestamp}-${index}`;
+            container.setAttribute('data-diagram-id', newId);
+        });
+        
+        // 为导出节点重新渲染图表
+        await diagramRenderer.renderDiagrams(cloneContent);
+        
+        // 为导出节点重新渲染ECharts图表
+        await echartsRenderer.renderECharts(cloneContent);
+        
+        // 额外等待确保所有渲染完成
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 再等待一帧确保DOM更新完成
+        await new Promise(resolve => requestAnimationFrame(resolve));
+    }
+    
     return clone;
 }
 
@@ -734,7 +1140,7 @@ async function exportToPNG() {
     let exportNode = null;
     try {
         showNotification('正在生成图片...', 'info');
-        exportNode = createExactExportNode();
+        exportNode = await createExactExportNode();
 
         // 预处理导出节点中的图片：设置跨域/防盗链属性并强制重新加载，尽量保证可被 html2canvas 捕获
         try {
@@ -782,7 +1188,7 @@ async function exportToPDF() {
     let exportNode = null;
     try {
         showNotification('正在生成 PDF...', 'info');
-        exportNode = createExactExportNode();
+        exportNode = await createExactExportNode();
 
         // 预处理导出节点中的图片
         try {
@@ -915,6 +1321,35 @@ async function renderWithFallbackScales(node, targetWidth, targetHeight, scales)
                             if (!img.getAttribute('loading')) img.setAttribute('loading', 'eager');
                         });
                     } catch (_) {}
+                    
+                    // 特殊处理KaTeX数学公式元素
+                    try {
+                        const katexElements = clonedDoc.querySelectorAll('.katex, .katex-display, .katex-mathml');
+                        katexElements.forEach(el => {
+                            // 确保KaTeX元素的样式被正确保留
+                            el.style.setProperty('font-family', 'KaTeX_Main, "Times New Roman", serif', 'important');
+                            if (el.classList.contains('katex-display')) {
+                                el.style.setProperty('display', 'block', 'important');
+                                el.style.setProperty('text-align', 'center', 'important');
+                            }
+                        });
+                    } catch (_) {}
+                    
+                    // 特殊处理Mermaid图表SVG
+                    try {
+                        const mermaidSvgs = clonedDoc.querySelectorAll('.mermaid svg');
+                        mermaidSvgs.forEach(svg => {
+                            // 确保SVG有明确的尺寸和样式
+                            if (!svg.getAttribute('width') && svg.getBoundingClientRect) {
+                                const rect = svg.getBoundingClientRect();
+                                if (rect.width > 0) svg.setAttribute('width', rect.width);
+                                if (rect.height > 0) svg.setAttribute('height', rect.height);
+                            }
+                            svg.style.setProperty('display', 'block', 'important');
+                            svg.style.setProperty('max-width', '100%', 'important');
+                        });
+                    } catch (_) {}
+                    
                     clonedDoc.documentElement.style.setProperty('overflow', 'hidden', 'important');
                     clonedDoc.body.style.setProperty('margin', '0', 'important');
                     clonedDoc.body.style.setProperty('padding', '0', 'important');
@@ -1121,6 +1556,263 @@ const MarkdownHelper = {
         textarea.value = beforeText + codeBlock + afterText;
         textarea.setSelectionRange(cursorPos + 4 + language.length, cursorPos + 4 + language.length);
         updatePreview();
+    },
+    
+    // 通用的插入方法
+    insertAtCursor: function(text) {
+        const textarea = markdownInput;
+        const cursorPos = textarea.selectionStart;
+        const beforeText = textarea.value.substring(0, cursorPos);
+        const afterText = textarea.value.substring(cursorPos);
+        
+        textarea.value = beforeText + text + afterText;
+        textarea.setSelectionRange(cursorPos + text.length, cursorPos + text.length);
+        textarea.focus();
+        updatePreview();
+    },
+    
+    // 插入质能守恒公式
+    insertEinsteinFormula: function() {
+        const formula = `
+
+## 质能守恒定律
+
+$$E = mc^{2}$$
+
+其中：
+- $E$ 表示能量
+- $m$ 表示质量  
+- $c$ 表示光速
+
+`;
+        this.insertAtCursor(formula);
+    },
+
+    // 插入数学公式模板
+    insertMathFormulas: function() {
+        const formulas = `
+
+## 常用数学公式
+
+### 代数
+**二次公式：** $x = \\frac{-b \\pm \\sqrt{b^{2} - 4ac}}{2a}$
+
+**因式分解：** $a^{2} - b^{2} = (a+b)(a-b)$
+
+### 微积分
+**导数定义：** $f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$
+
+**基本积分：** $\\int_a^b f(x)dx = F(b) - F(a)$
+
+### 三角函数
+**勾股定理：** $a^{2} + b^{2} = c^{2}$
+
+**正弦定理：** $\\frac{a}{\\sin A} = \\frac{b}{\\sin B} = \\frac{c}{\\sin C}$
+
+### 统计学
+**均值：** $\\bar{x} = \\frac{1}{n}\\sum_{i=1}^{n} x_i$
+
+**方差：** $\\sigma^{2} = \\frac{1}{n}\\sum_{i=1}^{n} (x_i - \\bar{x})^{2}$
+
+`;
+        this.insertAtCursor(formulas);
+    },
+
+    // 插入物理公式模板
+    insertPhysicsFormulas: function() {
+        const formulas = `
+
+## 物理公式集合
+
+### 经典力学
+**牛顿第二定律：** $F = ma$
+
+**万有引力定律：** $F = G\\frac{m_1 m_2}{r^{2}}$
+
+**动能：** $E_k = \\frac{1}{2}mv^{2}$
+
+**势能：** $E_p = mgh$
+
+### 电磁学
+**库仑定律：** $F = k\\frac{q_1 q_2}{r^{2}}$
+
+**欧姆定律：** $V = IR$
+
+**电功率：** $P = VI = I^{2}R = \\frac{V^{2}}{R}$
+
+### 现代物理
+**质能关系：** $E = mc^{2}$
+
+**德布罗意波长：** $\\lambda = \\frac{h}{p}$
+
+**海森堡不确定性原理：** $\\Delta x \\Delta p \\geq \\frac{\\hbar}{2}$
+
+`;
+        this.insertAtCursor(formulas);
+    },
+
+    // 插入化学公式模板
+    insertChemistryFormulas: function() {
+        const formulas = `
+
+## 化学公式集合
+
+### 基本化学反应
+**燃烧反应：** $\\ce{CH4 + 2O2 -> CO2 + 2H2O}$
+
+**酸碱中和：** $\\ce{HCl + NaOH -> NaCl + H2O}$
+
+**氧化还原：** $\\ce{2Na + Cl2 -> 2NaCl}$
+
+### 有机化学
+**甲烷：** $\\ce{CH4}$
+
+**乙醇：** $\\ce{C2H5OH}$
+
+**葡萄糖：** $\\ce{C6H12O6}$
+
+### 化学平衡
+**平衡常数：** $K_c = \\frac{[C]^c[D]^d}{[A]^a[B]^b}$
+
+**pH定义：** $pH = -\\log[H^+]$
+
+### 理想气体
+**理想气体定律：** $PV = nRT$
+
+`;
+        this.insertAtCursor(formulas);
+    },
+
+    // 插入流程图
+    insertFlowchart: function() {
+        const flowchart = `
+\`\`\`mermaid
+flowchart TD
+    A[开始] --> B{判断条件}
+    B -->|是| C[执行操作]
+    B -->|否| D[其他操作]
+    C --> E[结束]
+    D --> E
+\`\`\`
+`;
+        this.insertAtCursor(flowchart);
+    },
+    
+    // 插入序列图
+    insertSequenceDiagram: function() {
+        const sequenceDiagram = `
+\`\`\`mermaid
+sequenceDiagram
+    participant A as 用户
+    participant B as 系统
+    A->>B: 发送请求
+    B-->>A: 返回响应
+    A->>B: 确认收到
+\`\`\`
+`;
+        this.insertAtCursor(sequenceDiagram);
+    },
+    
+    // 插入甘特图
+    insertGanttChart: function() {
+        const ganttChart = `
+\`\`\`mermaid
+gantt
+    title 项目进度计划
+    dateFormat  YYYY-MM-DD
+    section 阶段一
+    任务1           :a1, 2024-01-01, 30d
+    任务2           :after a1, 20d
+    section 阶段二
+    任务3           :2024-02-01, 25d
+    任务4           :20d
+\`\`\`
+`;
+        this.insertAtCursor(ganttChart);
+    },
+    
+    // 插入饼图
+    insertPieChart: function() {
+        const pieChart = `
+\`\`\`mermaid
+pie title 数据分布
+    "类别A" : 42.96
+    "类别B" : 50.05
+    "类别C" : 10.01
+    "其他" : 5
+\`\`\`
+`;
+        this.insertAtCursor(pieChart);
+    },
+
+    // 插入ECharts图表模板
+    insertEChartsTemplate: function() {
+        const echartsTemplate = `
+
+## ECharts 图表示例
+
+### 饼图
+\`\`\`echarts
+{
+  "title": {
+    "text": "访问来源统计",
+    "left": "center"
+  },
+  "tooltip": {
+    "trigger": "item",
+    "formatter": "{a} <br/>{b} : {c} ({d}%)"
+  },
+  "legend": {
+    "orient": "vertical",
+    "left": "left",
+    "data": ["搜索引擎", "直接访问", "推荐", "其他", "社交平台"]
+  },
+  "series": [{
+    "name": "访问来源",
+    "type": "pie",
+    "radius": "55%",
+    "center": ["50%", "60%"],
+    "data": [
+      {"value": 10440, "name": "搜索引擎"},
+      {"value": 4770, "name": "直接访问"},
+      {"value": 2430, "name": "推荐"},
+      {"value": 342, "name": "其他"},
+      {"value": 18, "name": "社交平台"}
+    ]
+  }]
+}
+\`\`\`
+
+### 柱状图
+\`\`\`echarts
+{
+  "title": {
+    "text": "月度销售数据",
+    "left": "center"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "xAxis": {
+    "type": "category",
+    "data": ["1月", "2月", "3月", "4月", "5月", "6月"]
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "series": [{
+    "name": "销售额",
+    "type": "bar",
+    "data": [120, 200, 150, 80, 70, 110],
+    "itemStyle": {
+      "color": "#5470c6"
+    }
+  }]
+}
+\`\`\`
+
+`;
+        this.insertAtCursor(echartsTemplate);
     }
 };
 
@@ -1263,7 +1955,10 @@ window.MadopicApp = {
     showNotification,
     insertImage,
     handleImageFile,
-    getCurrentMadopicConfig
+    getCurrentMadopicConfig,
+    mathRenderer,
+    diagramRenderer,
+    echartsRenderer
 };
 
 /**
