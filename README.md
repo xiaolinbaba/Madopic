@@ -2,7 +2,7 @@
 
 > Madopic (Markdown to Picture) 精美的 Markdown 转图片工具 ✨
 
-![](https://github.com/xiaolinbaba/Madopic/blob/main/madopic.png)
+![](/madopic01.png)
 
 一个现代化的在线工具，可以将 Markdown 文本转换为精美的图片海报，特别适合社交媒体分享。
 
@@ -182,6 +182,10 @@ madopic/
 
 ## 📝 更新日志
 
+### 20250824
+- UI调整
+- 增加卡片信息
+
 ### v2.0.0 (20250814) - 🚀 重大功能更新 感谢贡献者 @[southbaird](https://github.com/southbaird)
 #### 🆕 新增功能
 - ✨ **数学公式渲染**：集成KaTeX引擎，支持LaTeX数学公式
@@ -219,4 +223,5 @@ madopic/
 🚀 **核心优势**：数学公式 | 专业图表 | 多格式导出 | 开箱即用
 
 **Madopic v2.0** - 让你的知识更有画面感 🎨✨
+
 
