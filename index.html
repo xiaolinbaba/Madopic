@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Madopic - Markdown to Picture</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20250811">
-    <link rel="apple-touch-icon" href="madopic.png?v=20250811">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20250814">
+    <link rel="apple-touch-icon" href="madopic.png?v=20250814">
     <meta name="theme-color" content="#6366f1">
     <meta name="description" content="精美的 Markdown 转图片工具，轻松制作社交媒体图片">
-    <link rel="manifest" href="manifest.json?v=20250811">
-    <link rel="stylesheet" href="style.css?v=20250811">
+    <link rel="manifest" href="manifest.json?v=20250814">
+    <link rel="stylesheet" href="style.css?v=20250814">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -33,7 +33,7 @@
         <div class="toolbar">
             <div class="toolbar-left">
                 <h1><img src="favicon.svg" alt="Madopic" class="app-icon"> Madopic</h1>
-                <span class="subtitle">Markdown to Picture ✨</span>
+                <span class="subtitle">Markdown to Picture 🎨✨</span>
             </div>
             <div class="toolbar-right">
                 <div class="mode-group" id="modeGroup" title="导出模式">
@@ -50,8 +50,11 @@
                         <span>朋友圈</span>
                     </button>
                 </div>
-                <button class="btn btn-secondary" id="customBtn">
-                    <i class="fas fa-cog"></i> 自定义
+                <button class="btn btn-secondary" id="backgroundBtn">
+                    <i class="fas fa-palette"></i> 背景设置
+                </button>
+                <button class="btn btn-secondary" id="layoutBtn">
+                    <i class="fas fa-text-height"></i> 文字布局
                 </button>
                 <button class="btn btn-primary" id="exportPngBtn">
                     <i class="fas fa-image"></i> 导出PNG
@@ -70,7 +73,7 @@
             <!-- 左侧编辑器 -->
             <div class="editor-panel">
                 <div class="panel-header">
-                    <h3><i class="fab fa-markdown"></i> Markdown 编辑器</h3>
+                    <h3><i class="fab fa-markdown"></i> Markdown</h3>
                     <div class="editor-tools">
                         <button class="tool-btn" data-action="bold" title="粗体">
                             <i class="fas fa-bold"></i>
@@ -120,6 +123,9 @@
                             <i class="fas fa-vial"></i>
                         </button>
                         <div class="tool-separator"></div>
+                        <button class="tool-btn" data-action="card" title="插入卡片">
+                            <i class="fas fa-id-card"></i>
+                        </button>
                         <button class="tool-btn" data-action="empty-line" title="加入空行">
                             <i class="fas fa-paragraph"></i>
                         </button>
@@ -130,14 +136,17 @@
                 </div>
                 <!-- 隐藏的文件选择器 -->
                 <input type="file" id="imageInput" accept="image/*" style="display: none;">
-                <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># Madopic
+                <div class="editor-with-lines">
+                    <pre class="line-numbers" aria-hidden="true"></pre>
+                    <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># Madopic
 
 > Madopic (Markdown to Picture) 精美的 Markdown 转图片工具 ✨
 
 ![](https://pic4.zhimg.com/v2-a342a311176f76e4120b7084d9f18db3_r.jpg)
 
-一个现代化的在线工具，可以将 Markdown 文本转换为精美的图片海报，特别适合社交媒体分享。
-
+:::card info
+一个现代化的在线工具，可以将 Markdown 文本转换为精美的图片海报，适合社交媒体分享。
+:::
 
 
 ## 🚀 主要功能
@@ -154,7 +163,8 @@
 - 文案图片制作
 - 产品功能介绍
 - 学习笔记可视化
-- 任何需要图片化展示的文本内容</textarea>
+-- 任何需要图片化展示的文本内容</textarea>
+                </div>
             </div>
 
             <!-- 右侧预览面板 -->
@@ -183,14 +193,12 @@
             </div>
         </div>
 
-        <!-- 自定义面板 -->
-        <div class="background-panel" id="customPanel">
+        <!-- 背景设置面板 -->
+        <div class="background-panel" id="backgroundPanel">
             <div class="panel-content">
-                <h3><i class="fas fa-cog"></i> 自定义设置</h3>
+                <h3><i class="fas fa-palette"></i> 背景设置</h3>
                 
-                <!-- 背景设置 -->
                 <div class="setting-section">
-                    <h4><i class="fas fa-palette"></i> 背景设置</h4>
                     <div class="option-group">
                         <label>预设背景：</label>
                         <div class="preset-backgrounds">
@@ -230,6 +238,18 @@
                     </div>
                 </div>
 
+                <div class="panel-actions">
+                    <button class="btn btn-secondary" id="cancelBackground">取消</button>
+                    <button class="btn btn-primary" id="applyBackground">应用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文字布局设置面板 -->
+        <div class="background-panel" id="layoutPanel">
+            <div class="panel-content">
+                <h3><i class="fas fa-text-height"></i> 文字布局设置</h3>
+                
                 <!-- 文字设置 -->
                 <div class="setting-section">
                     <h4><i class="fas fa-font"></i> 文字设置</h4>
@@ -262,8 +282,8 @@
                 </div>
 
                 <div class="panel-actions">
-                    <button class="btn btn-secondary" id="cancelCustom">取消</button>
-                    <button class="btn btn-primary" id="applyCustom">应用</button>
+                    <button class="btn btn-secondary" id="cancelLayout">取消</button>
+                    <button class="btn btn-primary" id="applyLayout">应用</button>
                 </div>
             </div>
         </div>
@@ -272,6 +292,6 @@
         <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="script.js?v=20250811"></script>
+    <script src="script.js?v=20250814"></script>
 </body>
 </html>
