@@ -355,6 +355,79 @@ class EChartsRenderer {
 // 创建全局 ECharts 渲染器实例
 const echartsRenderer = new EChartsRenderer();
 
+// ===== 卡片渲染器 =====
+class CardRenderer {
+    constructor() {
+        // 卡片渲染器不需要外部依赖
+    }
+
+    // 预处理Markdown中的卡片语法
+    preprocessCards(markdown) {
+        // 处理 :::card 语法，支持不同类型的卡片
+        return markdown.replace(/:::card(?:\s+(info|success|warning|error))?\s*\n([\s\S]*?)\n:::/g, (match, type, content) => {
+            const cardType = type || 'default';
+            const cardId = 'card-' + Math.random().toString(36).substr(2, 9);
+            return `<div class="card-container" data-card-id="${cardId}" data-card-type="${cardType}" data-card-content="${encodeURIComponent(content.trim())}"></div>`;
+        });
+    }
+
+    // 渲染页面中的所有卡片
+    async renderCards(container) {
+        const cardContainers = container.querySelectorAll('.card-container');
+        
+        for (const cardContainer of cardContainers) {
+            const cardId = cardContainer.getAttribute('data-card-id');
+            const cardType = cardContainer.getAttribute('data-card-type');
+            const cardContent = decodeURIComponent(cardContainer.getAttribute('data-card-content'));
+            
+            if (cardId && cardContent) {
+                await this.renderCard(cardContainer, cardContent, cardType);
+            }
+        }
+    }
+
+    // 渲染单个卡片
+    async renderCard(element, content, type) {
+        try {
+            // 清除之前的内容
+            element.innerHTML = '';
+            
+            // 解析卡片内容的Markdown
+            let htmlContent = '';
+            try {
+                htmlContent = marked.parse(content);
+            } catch (err) {
+                console.error('卡片内容Markdown解析失败: ', err);
+                htmlContent = '<p>卡片内容解析失败</p>';
+            }
+            
+            // 创建卡片HTML结构
+            const cardHtml = `
+                <div class="madopic-card ${type !== 'default' ? 'card-' + type : ''}">
+                    <div class="card-content">
+                        ${htmlContent}
+                    </div>
+                </div>
+            `;
+            
+            element.innerHTML = cardHtml;
+            
+        } catch (error) {
+            console.error('卡片渲染错误:', error);
+            element.innerHTML = `
+                <div class="madopic-card">
+                    <div class="card-content">
+                        <p style="color: #ef4444;">卡片渲染失败：${error.message}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+// 创建全局卡片渲染器实例
+const cardRenderer = new CardRenderer();
+
 // ===== 导出相关常量 =====
 // 控制导出清晰度的缩放倍数范围
 const EXPORT_MIN_SCALE = 2;
@@ -392,10 +465,12 @@ const backgroundPresets = {
 
 // DOM 元素
 const markdownInput = document.getElementById('markdownInput');
+const lineNumbersEl = document.querySelector('.line-numbers');
 const posterContent = document.getElementById('posterContent');
 const markdownPoster = document.getElementById('markdownPoster');
 const previewContent = document.getElementById('previewContent');
-const customPanel = document.getElementById('customPanel');
+const backgroundPanel = document.getElementById('backgroundPanel');
+const layoutPanel = document.getElementById('layoutPanel');
 const overlay = document.getElementById('overlay');
 const zoomLevel = document.querySelector('.zoom-level');
 
@@ -445,6 +520,9 @@ function initializeApp() {
     
     // 更新缩放显示
     updateZoomDisplay();
+
+    // 初始化行号
+    updateLineNumbers();
 }
 
 // 设置事件监听器
@@ -452,6 +530,8 @@ function setupEventListeners() {
     // Markdown 输入监听
     // 更平滑的输入预览：稍延长防抖并在输入结束时仅渲染一次
     markdownInput.addEventListener('input', debounce(updatePreview, 250));
+    markdownInput.addEventListener('input', updateLineNumbers);
+    markdownInput.addEventListener('scroll', syncLineNumbersScroll);
     
     // 工具栏按钮
     setupToolbarButtons();
@@ -460,11 +540,17 @@ function setupEventListeners() {
     document.getElementById('zoomIn').addEventListener('click', zoomIn);
     document.getElementById('zoomOut').addEventListener('click', zoomOut);
     
-    // 自定义面板
-    document.getElementById('customBtn').addEventListener('click', openCustomPanel);
-    document.getElementById('cancelCustom').addEventListener('click', closeCustomPanel);
-    document.getElementById('applyCustom').addEventListener('click', applyCustomSettings);
-    overlay.addEventListener('click', closeCustomPanel);
+    // 背景设置面板
+    document.getElementById('backgroundBtn').addEventListener('click', openBackgroundPanel);
+    document.getElementById('cancelBackground').addEventListener('click', closeBackgroundPanel);
+    document.getElementById('applyBackground').addEventListener('click', applyBackgroundSettings);
+    
+    // 文字布局设置面板
+    document.getElementById('layoutBtn').addEventListener('click', openLayoutPanel);
+    document.getElementById('cancelLayout').addEventListener('click', closeLayoutPanel);
+    document.getElementById('applyLayout').addEventListener('click', applyLayoutSettings);
+    
+    overlay.addEventListener('click', closeAllPanels);
 
     // 滑块事件监听
     setupSliders();
@@ -641,6 +727,9 @@ function handleToolbarAction(action) {
         case 'einstein':
             MarkdownHelper.insertEinsteinFormula();
             return;
+        case 'card':
+            MarkdownHelper.insertCard();
+            return;
         case 'empty-line':
             // 插入可在预览中可见的"Markdown 空行"占位段落
             insertText = `\n\n<p class="md-empty-line">&nbsp;</p>\n\n`;
@@ -662,6 +751,8 @@ function handleToolbarAction(action) {
 // 更新预览
 async function updatePreview() {
     const markdownText = markdownInput.value.trim();
+    // 同步行号（在去抖预览之外也保证立即更新）
+    updateLineNumbers();
     
     // 检查是否为空内容
     if (!markdownText) {
@@ -677,6 +768,9 @@ async function updatePreview() {
     
     // 预处理 ECharts 图表
     processedMarkdown = echartsRenderer.preprocessECharts(processedMarkdown);
+    
+    // 预处理卡片
+    processedMarkdown = cardRenderer.preprocessCards(processedMarkdown);
     
     // 替换简化的base64为完整版本进行预览
     processedMarkdown = replaceImageDataForPreview(processedMarkdown);
@@ -705,6 +799,9 @@ async function updatePreview() {
     // 渲染 ECharts 图表
     await echartsRenderer.renderECharts(posterContent);
     
+    // 渲染卡片
+    await cardRenderer.renderCards(posterContent);
+    
     // 确保内容容器可见
     posterContent.style.display = 'block';
     
@@ -718,6 +815,27 @@ async function updatePreview() {
     } else {
         posterContent.style.animation = '';
     }
+}
+
+// ===== 行号逻辑 =====
+function updateLineNumbers() {
+    if (!lineNumbersEl) return;
+    const value = markdownInput.value || '';
+    const lines = value.split('\n').length;
+    // 构造包含行号的内容（使用换行分隔）
+    let content = '';
+    for (let i = 1; i <= lines; i++) {
+        content += (i === 1 ? '' : '\n') + i;
+    }
+    lineNumbersEl.textContent = content || '1';
+    // 高度同步
+    lineNumbersEl.style.height = markdownInput.scrollHeight + 'px';
+    syncLineNumbersScroll();
+}
+
+function syncLineNumbersScroll() {
+    if (!lineNumbersEl) return;
+    lineNumbersEl.scrollTop = markdownInput.scrollTop;
 }
 
 // 显示空内容提示
@@ -798,15 +916,36 @@ function updateZoomDisplay() {
     zoomLevel.textContent = `${currentZoom}%`;
 }
 
-// 自定义面板
-function openCustomPanel() {
-    customPanel.classList.add('active');
+// 背景设置面板
+function openBackgroundPanel() {
+    backgroundPanel.classList.add('active');
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-function closeCustomPanel() {
-    customPanel.classList.remove('active');
+function closeBackgroundPanel() {
+    backgroundPanel.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// 文字布局设置面板
+function openLayoutPanel() {
+    layoutPanel.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLayoutPanel() {
+    layoutPanel.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// 关闭所有面板
+function closeAllPanels() {
+    backgroundPanel.classList.remove('active');
+    layoutPanel.classList.remove('active');
     overlay.classList.remove('active');
     document.body.style.overflow = '';
 }
@@ -837,7 +976,7 @@ function setupColorInputs() {
     });
 }
 
-function applyCustomSettings() {
+function applyBackgroundSettings() {
     // 应用背景设置
     let backgroundCSS;
     if (currentBackground === 'custom') {
@@ -850,6 +989,13 @@ function applyCustomSettings() {
     }
     applyBackground(backgroundCSS);
     
+    closeBackgroundPanel();
+    
+    // 显示成功提示
+    showNotification('背景设置已更新！', 'success');
+}
+
+function applyLayoutSettings() {
     // 应用字体大小设置
     currentFontSize = parseFloat(document.getElementById('fontSizeSlider').value);
     applyFontSize(currentFontSize);
@@ -862,10 +1008,10 @@ function applyCustomSettings() {
     currentWidth = parseInt(document.getElementById('widthSlider').value);
     applyWidth(currentWidth);
     
-    closeCustomPanel();
+    closeLayoutPanel();
     
     // 显示成功提示
-    showNotification('设置已更新！', 'success');
+    showNotification('文字布局设置已更新！', 'success');
 }
 
 function applyBackground(backgroundCSS) {
@@ -1020,6 +1166,9 @@ async function createExactExportNode() {
         
         // 为导出节点重新渲染ECharts图表
         await echartsRenderer.renderECharts(cloneContent);
+        
+        // 为导出节点重新渲染卡片
+        await cardRenderer.renderCards(cloneContent);
         
         // 额外等待确保所有渲染完成
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -1395,6 +1544,23 @@ function showNotification(message, type = 'info') {
         fontSize: '14px',
         fontWeight: '500'
     });
+
+    // 如果存在缩放工具栏，则将通知定位到百分比（缩放工具栏）下方
+    try {
+        const anchor = document.querySelector('.preview-tools') || document.querySelector('.zoom-level');
+        if (anchor && typeof anchor.getBoundingClientRect === 'function') {
+            const rect = anchor.getBoundingClientRect();
+            // fixed 定位采用视口坐标，直接使用 rect.bottom 即可
+            const computedTop = Math.max(rect.bottom + 10, 10);
+            notification.style.top = `${Math.round(computedTop)}px`;
+        } else {
+            // 略微下移默认位置，避免遮挡顶部工具栏
+            notification.style.top = '120px';
+        }
+    } catch (e) {
+        // 发生异常时退回到略低的默认位置
+        notification.style.top = '120px';
+    }
     
     notification.querySelector('.notification-content').style.cssText = `
         display: flex;
@@ -1745,6 +1911,53 @@ pie title 数据分布
         this.insertAtCursor(pieChart);
     },
 
+    // 插入卡片
+    insertCard: function() {
+        const cardTemplate = `
+
+:::card
+**卡片标题**
+
+这是一个精美的卡片内容区域。你可以在这里添加：
+
+- 重要信息
+- 产品特色
+- 使用说明
+- 任何想要突出显示的内容
+
+支持 **粗体**、*斜体*、\`代码\` 和 [链接](https://example.com) 等格式。
+:::
+
+**不同类型的卡片示例：**
+
+:::card info
+**信息卡片**
+
+这是一个信息类型的卡片，适合展示提示信息。
+:::
+
+:::card success
+**成功卡片**
+
+这是一个成功类型的卡片，适合展示成功状态。
+:::
+
+:::card warning
+**警告卡片**
+
+这是一个警告类型的卡片，适合展示注意事项。
+:::
+
+:::card error
+**错误卡片**
+
+这是一个错误类型的卡片，适合展示错误信息。
+:::
+
+`;
+        this.insertAtCursor(cardTemplate);
+    },
+
     // 插入ECharts图表模板
     insertEChartsTemplate: function() {
         const echartsTemplate = `
@@ -1958,7 +2171,8 @@ window.MadopicApp = {
     getCurrentMadopicConfig,
     mathRenderer,
     diagramRenderer,
-    echartsRenderer
+    echartsRenderer,
+    cardRenderer
 };
 
 /**
