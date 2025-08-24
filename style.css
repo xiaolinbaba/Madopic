@@ -203,7 +203,7 @@ body {
 
 /* 预览工具栏特殊样式，确保与右侧工具栏对齐 */
 .preview-panel .panel-header {
-    padding-right: 75px;
+    padding-right: 125px;
 }
 
 .preview-tools {
@@ -241,16 +241,39 @@ body {
 }
 
 /* Markdown 编辑器 */
+.editor-with-lines {
+    position: relative;
+    display: flex;
+    height: 100%;
+    background: #fafafa;
+}
+
+.line-numbers {
+    counter-reset: linenumber;
+    user-select: none;
+    pointer-events: none;
+    width: 48px;
+    padding: 20px 10px 20px 16px;
+    margin: 0;
+    background: #f3f4f6;
+    color: #94a3b8;
+    text-align: right;
+    line-height: 1.6;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+    font-size: 14px;
+    overflow: hidden;
+}
+
 #markdownInput {
     flex: 1;
     border: none;
-    padding: 20px;
+    padding: 20px 20px 20px 12px;
     font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
     font-size: 14px;
     line-height: 1.6;
     resize: none;
     outline: none;
-    background: #fafafa;
+    background: transparent;
     color: #374151;
 }
 
@@ -1015,4 +1038,173 @@ select {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
+}
+
+/* 卡片样式 */
+.madopic-card {
+    margin: 20px 0;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.12) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 80px;
+}
+
+.madopic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.3);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+}
+
+
+
+/* 卡片标题样式 */
+.madopic-card .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.madopic-card .card-title::before {
+    content: '🎯';
+    font-size: 18px;
+}
+
+/* 卡片内容样式 */
+.madopic-card .card-content {
+    color: var(--text-light);
+    line-height: 1.7;
+    font-size: var(--dynamic-font-size, 16px);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.madopic-card .card-content p {
+    margin-bottom: 10px;
+}
+
+.madopic-card .card-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* 卡片内的列表样式 */
+.madopic-card .card-content ul,
+.madopic-card .card-content ol {
+    margin: 12px 0;
+    padding-left: 20px;
+}
+
+.madopic-card .card-content li {
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+/* 卡片内的代码样式 */
+.madopic-card .card-content code {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: calc(var(--dynamic-font-size, 16px) * 0.875);
+}
+
+/* 卡片内的链接样式 */
+.madopic-card .card-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.madopic-card .card-content a:hover {
+    border-bottom-color: var(--primary-color);
+}
+
+/* 不同类型的卡片样式 */
+.madopic-card.card-info {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(29, 78, 216, 0.12) 100%);
+    border-color: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+}
+
+.madopic-card.card-info:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(29, 78, 216, 0.15) 100%);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+
+
+.madopic-card.card-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.12) 100%);
+    border-color: rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+}
+
+.madopic-card.card-success:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 8px 32px rgba(16, 185, 129, 0.15);
+}
+
+
+
+.madopic-card.card-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.12) 100%);
+    border-color: rgba(245, 158, 11, 0.2);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+}
+
+.madopic-card.card-warning:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+    border-color: rgba(245, 158, 11, 0.3);
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.15);
+}
+
+
+
+.madopic-card.card-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.12) 100%);
+    border-color: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.1);
+}
+
+.madopic-card.card-error:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 8px 32px rgba(239, 68, 68, 0.15);
+}
+
+
+
+.madopic-card.card-info .card-title::before {
+    content: 'ℹ️';
+}
+
+.madopic-card.card-success .card-title::before {
+    content: '✅';
+}
+
+.madopic-card.card-warning .card-title::before {
+    content: '⚠️';
+}
+
+.madopic-card.card-error .card-title::before {
+    content: '❌';
 }
