@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Madopic - Markdown to Picture</title>
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20250814">
-    <link rel="apple-touch-icon" href="madopic.png?v=20250814">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20250824">
+    <link rel="apple-touch-icon" href="madopic.png?v=20250824">
     <meta name="theme-color" content="#6366f1">
     <meta name="description" content="精美的 Markdown 转图片工具，轻松制作社交媒体图片">
-    <link rel="manifest" href="manifest.json?v=20250814">
-    <link rel="stylesheet" href="style.css?v=20250814">
+    <link rel="manifest" href="manifest.json?v=20250824">
+    <link rel="stylesheet" href="style.css?v=20250824">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
@@ -61,6 +61,9 @@
                 </button>
                 <button class="btn btn-primary" id="exportPdfBtn">
                     <i class="fas fa-file-pdf"></i> 导出PDF
+                </button>
+                <button class="btn btn-primary" id="exportHtmlBtn">
+                    <i class="fas fa-file-code"></i> 导出HTML
                 </button>
                 <a href="https://github.com/xiaolinbaba/Madopic" target="_blank" class="github-link" title="查看GitHub源码">
                     <i class="fab fa-github"></i>
@@ -140,7 +143,7 @@
                     <pre class="line-numbers" aria-hidden="true"></pre>
                     <textarea id="markdownInput" placeholder="在这里输入你的 Markdown 内容..."># Madopic
 
-> Madopic (Markdown to Picture) 精美的 Markdown 转图片工具 ✨
+> Madopic，精美的 Markdown 转图片工具 🎨
 
 ![](https://pic4.zhimg.com/v2-a342a311176f76e4120b7084d9f18db3_r.jpg)
 
@@ -151,19 +154,19 @@
 
 ## 🚀 主要功能
 
-1. 将 Markdown 内容转化为图文海报
-2. 可以自定义背景、字体大小和边距
-3. 所见即所得，快速导出为 png 格式的图片
-4. 免费使用
+- 将 Markdown 内容转化为图文海报
+- 可以自定义背景、字体大小和边距
+- 所见即所得，快速导出为 png 图片，pdf 文档
+- 支持本地图片，粘贴图片，网络图片
+- 支持 Mermaid，Echarts，数学公式，信息卡片等元素
 
 ## 🎯 使用场景
 
-- 制作精美海报
-- 社交媒体内容分享
-- 文案图片制作
-- 产品功能介绍
-- 学习笔记可视化
--- 任何需要图片化展示的文本内容</textarea>
+- 社交媒体，制作精美海报，信息卡片
+- 教育学习，教学课件，知识卡片
+- 商业应用，技术文档，架构图，数据展示
+- 学术科研，复杂公式，专业图表展示
+- 任何需要图片化展示的富文本内容</textarea>
                 </div>
             </div>
 
@@ -256,8 +259,8 @@
                     <div class="option-group">
                         <label>文字大小：</label>
                         <div class="slider-group">
-                            <input type="range" id="fontSizeSlider" min="12" max="20" value="16" step="0.5">
-                            <span class="slider-value" id="fontSizeValue">16px</span>
+                            <input type="range" id="fontSizeSlider" min="14" max="22" value="18" step="0.5">
+                            <span class="slider-value" id="fontSizeValue">18px</span>
                         </div>
                     </div>
                 </div>
@@ -292,6 +295,6 @@
         <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="script.js?v=20250814"></script>
+    <script src="script.js?v=20250824"></script>
 </body>
 </html>
