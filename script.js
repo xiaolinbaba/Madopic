@@ -475,7 +475,7 @@ const overlay = document.getElementById('overlay');
 const zoomLevel = document.querySelector('.zoom-level');
 
 // 新增设置变量
-let currentFontSize = 16;
+let currentFontSize = 18;
 let currentPadding = 40;
 let currentWidth = 640;
 let currentMode = 'free'; // 'free' | 'xhs' | 'pyq'
@@ -576,6 +576,7 @@ function setupEventListeners() {
 function setupExportButtons() {
     const exportPngBtn = document.getElementById('exportPngBtn');
     const exportPdfBtn = document.getElementById('exportPdfBtn');
+    const exportHtmlBtn = document.getElementById('exportHtmlBtn');
 
     if (exportPngBtn) {
         exportPngBtn.addEventListener('click', exportToPNG);
@@ -583,6 +584,10 @@ function setupExportButtons() {
 
     if (exportPdfBtn) {
         exportPdfBtn.addEventListener('click', exportToPDF);
+    }
+
+    if (exportHtmlBtn) {
+        exportHtmlBtn.addEventListener('click', exportToHTML);
     }
 }
 
@@ -1413,6 +1418,180 @@ async function exportToPDF() {
         if (exportNode && exportNode.parentNode) {
             exportNode.parentNode.removeChild(exportNode);
         }
+    }
+}
+
+// 导出为独立可打开的 HTML 文件
+async function exportToHTML() {
+    let exportNode = null;
+    try {
+        showNotification('正在生成 HTML...', 'info');
+
+        // 并行拉取需要内联的样式
+        const cssFetchPromise = Promise.all([
+            fetchCssBySelector('link[href*="style.css"]'),
+            fetchCssBySelector('link[rel="stylesheet"][href*="katex"]')
+        ]);
+
+        // 克隆并渲染离屏节点
+        exportNode = await createExactExportNode();
+
+        // 将 ECharts 图表替换为静态图片，确保离线可见
+        await replaceEChartsWithImages(exportNode);
+
+        // 收集样式（尽量内联，失败时保留外链兜底）
+        const [localCss, katexCss] = await cssFetchPromise;
+
+        // 组装完整 HTML
+        const html = buildStandaloneHTML(exportNode, { localCss, katexCss });
+
+        // 触发下载
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `madopic-${getFormattedTimestamp()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showNotification('HTML 导出成功！', 'success');
+    } catch (error) {
+        console.error('HTML 导出失败:', error);
+        showNotification('HTML 导出失败，请重试', 'error');
+    } finally {
+        if (exportNode && exportNode.parentNode) {
+            exportNode.parentNode.removeChild(exportNode);
+        }
+    }
+}
+
+// 根据 <link> 选择器抓取 CSS 内容
+async function fetchCssBySelector(selector) {
+    try {
+        const link = document.querySelector(selector);
+        if (!link || !link.href) return { inline: '', href: '' };
+        const href = link.href;
+        const css = await fetchTextSafe(href);
+        return { inline: css || '', href };
+    } catch (_) {
+        return { inline: '', href: '' };
+    }
+}
+
+// 安全获取文本，失败返回空字符串
+async function fetchTextSafe(url) {
+    try {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) return '';
+        return await res.text();
+    } catch (_) {
+        return '';
+    }
+}
+
+// 将克隆节点中的 ECharts 图表替换为 <img>（使用实例导出的 dataURL）
+async function replaceEChartsWithImages(root) {
+    const containers = root.querySelectorAll('.echarts-container');
+    for (const container of containers) {
+        try {
+            // chartContainer 是我们在渲染时创建的内部 div，实例挂在其属性上
+            const chartContainer = container.querySelector('div[id^="echarts-"]');
+            let dataUrl = '';
+            if (chartContainer && chartContainer._echartsInstance && typeof chartContainer._echartsInstance.getDataURL === 'function') {
+                dataUrl = chartContainer._echartsInstance.getDataURL({ type: 'png', pixelRatio: 1, backgroundColor: '#ffffff' });
+            } else {
+                // 兜底：合并所有 canvas 层
+                const canvases = container.querySelectorAll('canvas');
+                if (canvases.length > 0) {
+                    const base = canvases[0];
+                    const temp = document.createElement('canvas');
+                    temp.width = base.width;
+                    temp.height = base.height;
+                    const tctx = temp.getContext('2d');
+                    canvases.forEach(c => {
+                        try { tctx.drawImage(c, 0, 0); } catch (_) {}
+                    });
+                    dataUrl = temp.toDataURL('image/png');
+                }
+            }
+
+            if (dataUrl) {
+                const img = new Image();
+                img.src = dataUrl;
+                img.style.width = '100%';
+                img.style.height = 'auto';
+                // 用静态图替换整个容器内容
+                container.innerHTML = '';
+                container.appendChild(img);
+            }
+        } catch (_) {
+            // 忽略单个失败，继续处理其他图表
+        }
+    }
+}
+
+// 构建可独立打开的 HTML 文本
+function buildStandaloneHTML(exportNode, parts) {
+    const { localCss, katexCss } = parts || {};
+    const title = document.title || 'Madopic Export';
+
+    // 处理样式注入策略：优先内联，失败时保留外链
+    const cssBlocks = [];
+    if (localCss && localCss.inline) {
+        cssBlocks.push(`<style>\n${localCss.inline}\n</style>`);
+    } else if (localCss && localCss.href) {
+        cssBlocks.push(`<link rel="stylesheet" href="${localCss.href}">`);
+    }
+
+    if (katexCss && katexCss.inline) {
+        cssBlocks.push(`<style>\n${katexCss.inline}\n</style>`);
+    } else if (katexCss && katexCss.href) {
+        cssBlocks.push(`<link rel="stylesheet" href="${katexCss.href}">`);
+    }
+
+    // 为导出页添加极简 reset，并强制覆盖离屏/滚动样式，确保可见与可滚动
+    cssBlocks.push(`<style>\nhtml,body{margin:0;padding:0;background:#f3f4f6;}\nbody{overflow-y:auto !important;overflow-x:hidden;}\n#madopic-export-poster{position:relative !important;top:auto !important;left:auto !important;margin:40px auto !important;display:block !important;transform:none !important;height:auto !important;min-height:0 !important;overflow:visible !important;}\n#madopic-export-poster .poster-content{max-height:none !important;overflow:visible !important;}\n</style>`);
+
+    const head = `<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>${escapeHtml(title)}</title>\n${cssBlocks.join('\n')}\n</head>`;
+
+    // 克隆节点，清理离屏相关 inline 样式
+    const node = exportNode.cloneNode(true);
+    try {
+        node.style.position = '';
+        node.style.top = '';
+        node.style.left = '';
+        node.style.margin = '40px auto';
+        node.style.display = 'block';
+        node.style.transform = '';
+        // 若为固定比例模式（xhs/pyq），取消导出 HTML 的裁剪，保留完整内容
+        node.style.height = '';
+        node.style.minHeight = '';
+        node.style.overflow = 'visible';
+        const innerForHtml = node.querySelector('.poster-content');
+        if (innerForHtml) {
+            innerForHtml.style.maxHeight = '';
+            innerForHtml.style.overflow = 'visible';
+        }
+    } catch (_) {}
+
+    // 仅导出卡片区域，无需运行任何脚本
+    const body = `<body>\n${node.outerHTML}\n</body>\n</html>`;
+
+    return `${head}\n${body}`;
+}
+
+function escapeHtml(str) {
+    try {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    } catch (_) {
+        return '' + str;
     }
 }
 
