@@ -1,0 +1,33 @@
+{
+  "name": "madopic",
+  "version": "1.0.0",
+  "description": "A beautiful Markdown to Picture tool for creating stunning social media graphics",
+  "main": "index.html",
+  "scripts": {
+    "setup": "./setup.sh",
+    "start": "npx serve .",
+    "dev": "npx serve . --port 3000",
+    "serve": "npx serve . --port 8000",
+    "clean": "rm -rf vendor/",
+    "update-deps": "./setup.sh"
+  },
+  "keywords": [
+    "markdown",
+    "image",
+    "social-media",
+    "graphics",
+    "katex",
+    "mermaid",
+    "echarts"
+  ],
+  "author": "Madopic Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xiaolinbaba/Madopic.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
